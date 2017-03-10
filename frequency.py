@@ -10,7 +10,12 @@ def get_word_list(file_name):
     returns a list of the words used in the book as a list.
     All words are converted to lower case.
     """
-    pass
+    book = open(file_name, 'rb')
+    text = str(book.read()).replace('\\n', ' ')
+    book.close
+    text = text.lower()
+    wordList = text.split()
+    return wordList
 
 
 def get_top_n_words(word_list, n):
@@ -23,8 +28,26 @@ def get_top_n_words(word_list, n):
     returns: a list of n most frequently occurring words ordered from most
     frequently to least frequentlyoccurring
     """
-    pass
+    hist = {}
+    for word in word_list:
+        if word not in hist:
+            hist[word] = 1
+        else:
+            hist[word] += 1
+    frequencies = []
+    for item in hist:
+        frequencies.append(hist[item])
+    frequencies.sort()
+    top_n_freq = frequencies[len(frequencies)-n:]
+    topWords = []
+    for item in hist:
+        if hist[item] in top_n_freq:
+            topWords.append(item)
+    return topWords
+
 
 if __name__ == "__main__":
     print("Running WordFrequency Toolbox")
-    print(string.punctuation)
+    word_list = get_word_list('Dracula.txt')
+    print(get_top_n_words(word_list, 100))
+    # print(string.punctuation)
