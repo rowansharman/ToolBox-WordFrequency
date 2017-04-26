@@ -2,6 +2,7 @@
 Project Gutenberg """
 
 import string
+import re
 
 
 def get_word_list(file_name):
@@ -13,12 +14,18 @@ def get_word_list(file_name):
     book = open(file_name, 'rb')
     text = str(book.read())
     book.close
-    text = text.replace('\\n', ' ')
+    rxHeader = re.compile("\*\*\* START OF THIS PROJECT GUTENBERG EBOOK.*?\*\*\*")
+    rxFooter = re.compile("\*\*\* END OF THIS PROJECT GUTENBERG EBOOK.*?\*\*\*")
+    header = rxHeader.search(text)
+    footer = rxFooter.search(text)
+    text = text[header.end():footer.start()]
+    # Remove everything added by Project Gutenberg. (Leaves Table of Contents and other information in original printing)
+    text = text.replace('\\n', ' ')  # Get rid of newline characters
     punc = string.punctuation.replace("'", '')
     for char in punc:
-        text = text.replace(char, '')
-    text = text.lower()
-    wordList = text.split()
+        text = text.replace(char, '')  # get rid of all punctuation except apostrophes
+    text = text.lower()  # make everything lowercase
+    wordList = text.split()  # Break text into a list of words
     return wordList
 
 
@@ -38,24 +45,27 @@ def get_top_n_words(word_list, n):
             hist[word] = 1
         else:
             hist[word] += 1
-    frequencies = []
-    for item in hist:
-        frequencies.append(hist[item])
-    frequencies.sort()
-    for i in range(n,len(frequencies)):
-        if frequencies[i] != frequencies[i+1]:
-            frequencies = frequencies[:i]
-            break
-    # Get the n words with the highest frequency, and the rest of the words with the same frequency as the last one.
+    frequencyList = []
+    for key, value in hist.items():
+        frequencyList.append((value, key))
+    frequencyList.sort(reverse=True)
+
+    if len(frequencyList) <= n:
+        return frequencyList
+
+    lowFreq = frequencyList[n-1][0]
     topWords = []
-    for item in hist:
-        if hist[item] in frequencies:
-            topWords.append(item)
+    for word in frequencyList:
+        if word[0] >= lowFreq:
+            topWords.append(word)
     return topWords
 
 
 if __name__ == "__main__":
+    numWords = 100
     print("Running WordFrequency Toolbox")
     word_list = get_word_list('Dracula.txt')
-    print(get_top_n_words(word_list, 100))
-    # print(string.punctuation)
+    topNWords = get_top_n_words(word_list, numWords)
+    print('Words with top ' + str(numWords) + ' rankings:\n(Found ' + str(len(topNWords)) + ' words)')
+    for word in topNWords:
+        print (word[1] + '\t' + str(word[0]))
